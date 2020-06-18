@@ -42,7 +42,7 @@ class People(Base):
     last_name = Column(String(30))
     position = Column(String(20))
     number = Column(String(15))
-    bday = Column(Date)
+    bday = Column(String(15))
     address = Column(String(100))
     gender = Column(String(20))
 
