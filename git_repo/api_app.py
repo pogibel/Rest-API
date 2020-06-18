@@ -25,7 +25,7 @@ class get_data():
         resp.status = falcon.HTTP_200
 
         output = {}
-        data =json_reader.read(req)
+        data = json_reader.read(req)
 
         if data is not None:
             if('data type' not in data):
@@ -64,6 +64,8 @@ class get_data():
                 'gender' : peop.gender
             }
             all_data_list.append(one_peron_data)
+
+        session.close()
         
         return {'server answer' : all_data_list}
 
@@ -75,13 +77,32 @@ class edit_data():
         data = json_reader.read(req)
 
         if data is not None:
-            if('add people' not in data not in data):
+            if('add people' not in data):
                 resp.status = falcon.HTTP_404
                 output = { 'error' : 'plz enter method'}   
             else:
                 if('add people' in data): 
                     people_data = data['add people']
                     output = self.add_people(people_data)
+        else:
+            resp.status = falcon.HTTP_501  
+            output = { 'error' : 'no json data'}  
+        resp.body = json.dumps(output)
+
+    def on_delete(self, req, resp):
+        resp.status = falcon.HTTP_200
+
+        output = {}
+        data = json_reader.read(req)
+
+        if data is not None:
+            if('delete people' not in data):
+                resp.status = falcon.HTTP_404
+                output = { 'error' : 'plz enter method'}   
+            else:
+                if('delete people' in data): 
+                    people_data = data['delete people']
+                    output = self.delete_people(people_data)
         else:
             resp.status = falcon.HTTP_501  
             output = { 'error' : 'no json data'}  
@@ -111,11 +132,30 @@ class edit_data():
 
             session.add(peop)
             session.commit()
+            session.close()
             
         except TypeError:
             return {"error" : "type error"}
 
         return {"server answer" : "people added"}
+    
+    def delete_people(self, people_data):
+        error_list = []
+
+        if('id' not in people_data):
+            error_list.append("no id")
+
+        if(len(error_list) != 0):
+            return {"error at adding" : error_list}
+
+        try:
+            session.query(People).filter(People.id == people_data['id']).delete()
+            session.commit()
+            session.close()
+        except TypeError:
+            return {"error" : "type error"}
+
+        return {"server answer" : "people deleted"}
 
     def check_people_data(self, people_data):
         error_list = []
