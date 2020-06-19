@@ -32,8 +32,13 @@ class get_data():
                 resp.status = falcon.HTTP_404
                 output = { 'error' : 'plz enter data type'}
             else:
-                if(data['data type'] == 'all'):
+                if('get all data' in data):
                     output = self.generate_full_data()
+
+                if('filter people' in data):
+                    q = session.query(People).filter_by(id = 1)
+                    q = q.filter_by(first_name = "name")
+                    print(q)
                 else:
                     resp.status = falcon.HTTP_404
                     output = { 'error' : 'not such data type'}
@@ -220,8 +225,6 @@ class edit_data():
             error_list.append("no department_id")
 
         return error_list
-
-#test commit
 
 app = falcon.API()
 app.add_route('/api/get_data', get_data())
