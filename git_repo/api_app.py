@@ -87,8 +87,7 @@ class edit_data():
                 
                 if('edit people' in data): 
                     people_data = data['edit people']
-                    output = 'work'
-                   # output = self.add_people(people_data)
+                    output = self.edit_people(people_data)
         else:
             resp.status = falcon.HTTP_501  
             output = { 'error' : 'no json data'}  
@@ -144,6 +143,44 @@ class edit_data():
 
         return {"server answer" : "people added"}
     
+    def edit_people(self, people_data):
+        error_list = []
+
+        if('id' not in people_data):
+            error_list.append("no id")    
+        
+        if(len(error_list) != 0):
+            return {"error at editing" : error_list}
+        
+        try:
+            peop = session.query(People).get(people_data['id'])
+
+            if('first_name' in people_data):
+                peop.first_name = people_data["first_name"]
+            if('department_id' in people_data):
+                peop.department_id = people_data['department_id']
+            if('first_name' in people_data):
+                peop.first_name = people_data['first_name'] 
+            if('last_name' in people_data):
+                peop.last_name = people_data['last_name']
+            if('position' in people_data):
+                peop.position = people_data['position']
+            if('number' in people_data):
+                peop.number = people_data['number']
+            if('bday' in people_data):
+                peop.bday = people_data['bday'] 
+            if('address' in people_data):
+                peop.address = people_data['address']
+            if('gender' in people_data):
+                peop.gender = people_data['gender']
+
+            session.commit()
+            session.close()
+        except TypeError:
+            return {"error" : "type error"}
+
+        return {"server answer" : "people edited"}
+
     def delete_people(self, people_data):
         error_list = []
 
