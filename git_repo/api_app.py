@@ -77,13 +77,18 @@ class edit_data():
         data = json_reader.read(req)
 
         if data is not None:
-            if('add people' not in data):
+            if('add people' not in data and 'edit people' not in data):
                 resp.status = falcon.HTTP_404
                 output = { 'error' : 'plz enter method'}   
             else:
                 if('add people' in data): 
                     people_data = data['add people']
                     output = self.add_people(people_data)
+                
+                if('edit people' in data): 
+                    people_data = data['edit people']
+                    output = 'work'
+                   # output = self.add_people(people_data)
         else:
             resp.status = falcon.HTTP_501  
             output = { 'error' : 'no json data'}  
