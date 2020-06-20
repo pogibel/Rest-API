@@ -6,6 +6,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql.expression import func
 
+from sqlalchemy import and_
+    
 engine = create_engine('sqlite:///practice.db') 
 Session = sessionmaker(bind = engine)
 session = Session()
@@ -32,16 +34,18 @@ class get_data():
                 resp.status = falcon.HTTP_404
                 output = { 'error' : 'plz enter data type'}
             else:
-                if('get all data' in data):
+                if(data['data type'] == 'all'):
                     output = self.generate_full_data()
-
-                if('filter people' in data):
-                    q = session.query(People).filter_by(id = 1)
-                    q = q.filter_by(first_name = "name")
-                    print(q)
+                elif(data['data type'] == 'filter people'):
+                    if('filter type' not in data):
+                        output = { 'error' : 'no filter type'}
+                    elif(len(data['filter type']) == 0):
+                        output = { 'error' : 'empty filter type'}
+                    else:
+                        output = self.filter_people(data['filter type'])
                 else:
                     resp.status = falcon.HTTP_404
-                    output = { 'error' : 'not such data type'}
+                    output = { 'error' : 'no such data type'}
         else:
             resp.status = falcon.HTTP_501  
             output = { 'error' : 'no json data'}  
@@ -73,6 +77,70 @@ class get_data():
         session.close()
         
         return {'server answer' : all_data_list}
+
+    def filter_people(self, filter_type):
+        all_data_list = []
+        one_peron_data = {}
+
+        filters = []
+
+        if('organization_id' in filter_type):
+            filters.append(Organization.id.ilike('%' + str(filter_type['organization_id']) + '%'))
+        if('organization' in filter_type):
+            filters.append(Organization.name.ilike('%' + str(filter_type['organization']) + '%'))
+        if('branch_id' in filter_type):
+            filters.append(Branch.id.ilike('%' + str(filter_type['branch_id']) + '%'))
+        if('branch' in filter_type):
+            filters.append(Branch.name.ilike('%' + str(filter_type['branch']) + '%'))
+        if('dep_id' in filter_type):
+            filters.append(Department.id.ilike('%' + str(filter_type['dep_id']) + '%'))
+        if('dep' in filter_type):
+            filters.append(Department.name.ilike('%' + str(filter_type['dep']) + '%'))
+        if('id' in filter_type):
+            filters.append(People.id.ilike('%' + str(filter_type['id']) + '%'))
+        if('first_name' in filter_type):
+            filters.append(People.first_name.ilike('%' + str(filter_type['first_name']) + '%'))
+        if('last_name' in filter_type):
+            filters.append(People.last_name.ilike('%' + str(filter_type['last_name']) + '%'))
+        if('position' in filter_type):
+            filters.append(People.position.ilike('%' + str(filter_type['position']) + '%'))
+        if('number' in filter_type):
+            filters.append(People.number.ilike('%' + str(filter_type['number']) + '%'))
+        if('bday' in filter_type):
+            filters.append(People.bday.ilike('%' + str(filter_type['bday']) + '%'))
+        if('address' in filter_type):
+            filters.append(People.address.ilike('%' + str(filter_type['address']) + '%'))
+        if('gender' in filter_type):
+            filters.append(People.gender.like(filter_type['gender']))
+
+        query = session.query(Organization, Branch, Department, People).\
+            filter(Organization.id == Branch.organization_id, Branch.id == Department.branch_id, Department.id == People.department_id).filter(and_(*filters))
+
+        try:
+            for org, bran, dep, peop in query:
+                one_peron_data = {
+                    'organization_id' : org.id,
+                    'organization' : org.name,
+                    'branch_id' : bran.id,
+                    'branch' : bran.name,
+                    'dep_id' : dep.id,
+                    'dep' : dep.name,
+                    'id' : peop.id,
+                    'first_name' : peop.first_name,
+                    'last_name' : peop.last_name,
+                    'position' : peop.position,
+                    'number' : peop.number,
+                    'bday' : str(peop.bday),
+                    'address' : peop.address,
+                    'gender' : peop.gender
+                }
+                all_data_list.append(one_peron_data)
+
+            session.close()
+            
+            return {'server answer' : all_data_list}
+        except TypeError:
+            return {'error' : "type error"}
 
 class edit_data():
     def on_post(self, req, resp):
