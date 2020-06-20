@@ -58,8 +58,6 @@ class get_data():
         query = session.query(Organization, Branch, Department, People).\
             filter(Organization.id == Branch.organization_id, Branch.id == Department.branch_id, Department.id == People.department_id).order_by(Branch.id)
 
-        print(query)
-
         for org, bran, dep, peop in query:
             one_peron_data = {
                 'organization' : org.name,
